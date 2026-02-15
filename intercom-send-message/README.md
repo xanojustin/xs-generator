@@ -38,7 +38,7 @@ The job is configured with test values in `run.xs`. Modify the input values or o
 | `to_email` | text | No | Email address of recipient (creates/updates contact) |
 | `subject` | text | No | Subject line for email messages |
 | `template_id` | text | No | Intercom template ID to use |
-| `use_template` | boolean | No | Whether to use a template (default: `false`) |
+| `use_template` | text | No | Set to `'true'` to use template (default: `'false'`) |
 
 **Note:** At least one of `to_user_id`, `to_contact_id`, or `to_email` is required.
 

@@ -32,65 +32,100 @@ The topic matching logic in the MCP server may not be working correctly, or the 
 
 ---
 
-## 2026-02-15 07:30 PST - validate_xanoscript JSON Parsing Issues
+## 2026-02-15 07:30 PST - validate_xanoscript Input Method Confusion (RESOLVED)
 
 **What I was trying to do:**
-Validate my XanoScript code using the validate_xanoscript tool. I tried multiple approaches:
+Validate XanoScript code using the validate_xanoscript tool. I tried multiple approaches that all failed:
 1. `mcporter call xano validate_xanoscript -- "$(cat file.xs)"`
 2. `cat file.xs | jq -Rs '{code: .}' | mcporter call xano validate_xanoscript`
 3. Writing to a temp file and using `--input /tmp/file.json`
 4. Using `@/tmp/file.json` syntax
 
 **What the issue was:**
-All approaches failed with different errors:
-- "Found 1 error(s): [Line 1, Column 1] Expecting --> function <-- but found --> '-' <--" (the file clearly starts with 'function', not '-')
+None of the standard mcporter input methods worked. All approaches failed with errors like:
+- "Expecting --> function <-- but found --> '-' <--"
 - "Too many positional arguments (2) supplied"
 - "'code' parameter is required"
-- "Error: 'code' parameter is required" (when using stdin)
-
-The validation tool seems unable to properly receive the code content via mcporter's various input methods.
 
 **Why it was an issue:**
-I couldn't validate my XanoScript code before committing. This defeats the purpose of having a validation tool in the MCP. I had to rely on comparing my code to existing examples instead of getting proper validation feedback.
+I couldn't validate my code before committing.
 
-**Potential solution (if known):**
-The MCP tool may need better handling of:
-1. Large/multi-line string parameters
-2. JSON stdin parsing
-3. File-based input (@ syntax)
-4. The --input flag behavior
+**RESOLUTION:**
+A subagent discovered the correct syntax:
+```bash
+mcporter call "xano.validate_xanoscript(code: $(jq -Rs . ~/xs/intercom-send-message/function/send_message.xs))"
+```
 
-Alternatively, the mcporter CLI wrapper may need fixes for how it passes arguments to the MCP server.
+Or using variable assignment:
+```bash
+CODE=$(cat file.xs) && mcporter call xano validate_xanoscript "code=$CODE"
+```
+
+The key insight is using `xano.validate_xanoscript(code: ...)` syntax instead of `xano validate_xanoscript`.
 
 ---
 
-## 2026-02-15 07:35 PST - xanoscript_docs File Path Parameter Not Working
+## 2026-02-15 07:40 PST - XanoScript Syntax Issues Discovered During Validation
 
 **What I was trying to do:**
-Get context-aware documentation by using the file_path parameter: `mcporter call xano xanoscript_docs '' 'run.job' 'full'`
+Validate the Intercom send message function after finding the correct validation syntax.
 
-**What the issue was:**
-The tool returned the same generic syntax documentation regardless of the file_path parameter. The "Matched topics: syntax" message indicated it didn't match the 'run.job' file pattern.
+**What the issues were:**
+
+### 1. `boolean` is not a valid input type
+```xs
+// ❌ Invalid
+boolean use_template?=false { description = "..." }
+
+// ✅ Valid  
+text use_template?="false" filters=trim { description = "..." }
+```
+
+### 2. Multiline precondition expressions don't parse
+```xs
+// ❌ Invalid
+precondition (
+  ($input.a != null) ||
+  ($input.b != null)
+) { ... }
+
+// ✅ Valid
+precondition (($input.a != null) || ($input.b != null)) { ... }
+```
+
+### 3. `body` is not a valid api.request parameter
+```xs
+// ❌ Invalid
+api.request {
+  body = $payload|json_encode
+  ...
+}
+
+// ✅ Valid
+api.request {
+  params = $payload
+  ...
+}
+```
 
 **Why it was an issue:**
-The file_path parameter should provide context-aware documentation based on the file type, but it wasn't working.
+These syntax issues weren't obvious from reading examples. The documentation doesn't clearly specify valid input types or api.request parameters.
 
 **Potential solution (if known):**
-The applyTo pattern matching in the MCP server may not be correctly configured for run.job files, or the file_path parameter isn't being properly parsed.
+Better documentation about:
+- Valid input types (only `text`, `integer`, `decimal`, `timestamp`, `object`, `array`?)
+- api.request parameters (body vs params confusion)
+- Expression formatting in preconditions
 
 ---
 
 ## Summary
 
-The Xano MCP server has several issues that make it difficult to use for XanoScript development:
+The Xano MCP server works but has documentation/usability issues:
 
 1. **Documentation retrieval is broken** - xanoscript_docs returns syntax docs regardless of requested topic
-2. **Validation is broken** - validate_xanoscript cannot receive code via any input method
-3. **No working file-based validation** - Can't validate files directly by path
+2. **Validation syntax is non-obvious** - The correct mcporter call syntax is `xano.validate_xanoscript(code: ...)` not `xano validate_xanoscript -- ...`
+3. **Missing type documentation** - `boolean` input type doesn't exist but isn't documented
+4. **api.request parameter confusion** - `body` vs `params` isn't clearly explained
 
-I had to resort to:
-- Reading existing examples in ~/xs/ folder to understand syntax
-- Guessing the correct structure based on patterns from stripe-charge-customer and others
-- Committing code without validation
-
-These issues significantly reduce the value of the MCP server for AI-assisted XanoScript development.
+Once the correct validation syntax was discovered, the tool worked well and caught real syntax errors.

@@ -8,7 +8,7 @@ function "send_message" {
     text to_email? filters=trim { description = "Email address of recipient (optional, for new contacts)" }
     text subject? filters=trim { description = "Subject line for email messages (optional)" }
     text template_id? filters=trim { description = "Intercom template ID to use (optional)" }
-    boolean use_template?=false { description = "Whether to use a template (default: false)" }
+    text use_template?="false" filters=trim { description = "Whether to use a template - 'true' or 'false' (default: 'false')" }
   }
 
   stack {
@@ -28,11 +28,7 @@ function "send_message" {
     }
 
     // Validate at least one recipient identifier is provided
-    precondition (
-      ($input.to_user_id != null && $input.to_user_id != "") ||
-      ($input.to_contact_id != null && $input.to_contact_id != "") ||
-      ($input.to_email != null && $input.to_email != "")
-    ) {
+    precondition (($input.to_user_id != null && $input.to_user_id != "") || ($input.to_contact_id != null && $input.to_contact_id != "") || ($input.to_email != null && $input.to_email != "")) {
       error_type = "inputerror"
       error = "At least one recipient identifier is required: to_user_id, to_contact_id, or to_email"
     }
@@ -89,7 +85,7 @@ function "send_message" {
 
     // Add template if using template
     conditional {
-      if ($input.use_template && $input.template_id != null && $input.template_id != "") {
+      if ($input.use_template == "true" && $input.template_id != null && $input.template_id != "") {
         var.update $payload {
           value = $payload|set:"template_id":$input.template_id
         }
@@ -100,7 +96,7 @@ function "send_message" {
     api.request {
       url = "https://api.intercom.io/messages"
       method = "POST"
-      body = $payload|json_encode
+      params = $payload
       headers = [
         "Content-Type: application/json",
         "Authorization: Bearer " ~ $api_key,
