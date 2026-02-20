@@ -1,41 +1,43 @@
 # Palindrome Check
 
 ## Problem
-Determine whether a given string is a palindrome. A palindrome is a word, phrase, number, or other sequence of characters that reads the same forward and backward (ignoring spaces, punctuation, and capitalization).
+Determine if a given string is a palindrome. A palindrome is a word, phrase, number, or other sequence of characters that reads the same forward and backward (ignoring spaces, punctuation, and capitalization).
 
 Examples of palindromes:
-- "radar"
+- "racecar"
 - "A man a plan a canal Panama"
 - "Was it a car or a cat I saw"
-- "racecar"
+- "No lemon, no melon"
 
 ## Structure
 - **Run Job (`run.xs`):** Calls the solution function with test inputs
-- **Function (`function/palindrome_check.xs`):** Contains the solution logic
+- **Function (`function/is_palindrome.xs`):** Contains the solution logic
 
 ## Function Signature
 - **Input:** 
-  - `input_string` (text): The string to check for palindrome properties
+  - `text` (text, required): The string to check for palindrome properties
 - **Output:** 
-  - (bool): `true` if the string is a palindrome, `false` otherwise
+  - Returns `true` if the string is a palindrome, `false` otherwise (boolean)
 
 ## Algorithm
-1. Normalize the input string by:
-   - Converting to lowercase
-   - Removing all non-alphanumeric characters (spaces, punctuation, etc.)
-2. Reverse the normalized string
-3. Compare the normalized string with its reverse
-4. Return `true` if they match, `false` otherwise
+1. Convert the input string to lowercase for case-insensitive comparison
+2. Remove all non-alphanumeric characters using regex
+3. Split the cleaned string into an array of characters
+4. Reverse the array
+5. Join the reversed array back into a string
+6. Compare the cleaned string with its reversed version
+7. Return `true` if they match, `false` otherwise
 
 ## Test Cases
 
-| Input | Expected Output |
-|-------|-----------------|
-| `"radar"` | `true` |
-| `"hello"` | `false` |
-| `"A man a plan a canal Panama"` | `true` |
-| `""` | `true` (empty string edge case) |
-| `"a"` | `true` (single character) |
-| `"Was it a car or a cat I saw"` | `true` |
-| `"12321"` | `true` (numeric palindrome) |
-| `"12345"` | `false` |
+| Input | Expected Output | Notes |
+|-------|-----------------|-------|
+| `"racecar"` | `true` | Classic palindrome |
+| `"A man a plan a canal Panama"` | `true` | Palindrome with spaces |
+| `"hello"` | `false` | Not a palindrome |
+| `""` | `true` | Empty string edge case |
+| `"a"` | `true` | Single character edge case |
+| `"Was it a car or a cat I saw"` | `true` | Complex palindrome with mixed case |
+| `"No lemon, no melon"` | `true` | Palindrome with punctuation |
+| `"12321"` | `true` | Numeric palindrome |
+| `"12345"` | `false` | Non-palindrome numbers |

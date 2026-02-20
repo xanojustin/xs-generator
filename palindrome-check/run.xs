@@ -1,9 +1,8 @@
-// Run job to test the palindrome_check function
-run.job "Test Palindrome Check" {
+run.job "Palindrome Check Test" {
   main = {
-    name: "palindrome_check"
+    name: "is_palindrome"
     input: {
-      input_string: "A man a plan a canal Panama"
+      text: "A man a plan a canal Panama"
     }
   }
 }

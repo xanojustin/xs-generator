@@ -1,23 +1,30 @@
 # FEEDBACK.md - Xano MCP/XanoScript Feedback
 
-## [2025-02-19 13:05 PST] - Issue 1: Incorrect filter name assumption
+## [2026-02-19 17:01 PST] - File Path Parsing Issue
 
-**What I was trying to do:** Create a palindrome check function that normalizes input strings by converting to lowercase and removing non-alphanumeric characters.
+**What I was trying to do:** Validate multiple `.xs` files by passing comma-separated file paths to the `validate_xanoscript` tool.
 
-**What the issue was:** I assumed the lowercase filter was `lower` (common in many languages), but XanoScript uses `to_lower`. The validation caught this with a clear error message.
+**What the issue was:** When using `file_paths` parameter with comma-separated values like `file_paths=/path/to/file1.xs,/path/to/file2.xs`, the MCP server interpreted each character after the comma as a separate file path. This resulted in errors like:
+- "File not found: U"
+- "File not found: s"
+- "File not found: e"
+- etc.
 
-**Why it was an issue:** This is a common naming discrepancy between languages. JavaScript uses `toLowerCase()`, Python uses `lower()`, XanoScript uses `to_lower`. Without validation, this would have been a runtime error.
+The comma appears to be splitting the string into individual characters rather than maintaining the file path list.
 
-**Potential solution (if known):** The MCP validation worked perfectly here - caught the issue immediately with line/column numbers. The documentation also lists the correct filter name. No changes needed to the MCP, but perhaps the docs could mention common aliases that people might try (like `lower` vs `to_lower`).
+**Why it was an issue:** This prevented batch validation of multiple specific files. I had to work around this by using the `directory` parameter instead, which validates all files in a directory.
 
----
+**Potential solution (if known):** 
+1. The MCP should properly handle comma-separated values in the `file_paths` array parameter
+2. Alternatively, document that `file_paths` should be passed as a JSON array format instead of comma-separated
+3. As a workaround, using `directory` parameter with a specific subdirectory works well for batch validation
 
-## [2025-02-19 13:05 PST] - Positive Feedback: Validation Tool Works Great
+## [2026-02-19 17:01 PST] - Validation Success
 
-**What worked well:**
-1. The `validate_xanoscript` tool provides clear, actionable error messages with exact line and column numbers
-2. The error message even included a helpful suggestion (though it was about a different issue - type names)
-3. The tool accepts `file_path` parameter which makes it easy to validate files directly without escaping code
-4. Both files validated successfully on the second attempt
+**What I was trying to do:** Validate XanoScript code for syntax errors
 
-**No issues to report with the MCP itself** - the validation tool performed exactly as expected and helped catch the syntax error immediately.
+**What the issue was:** None - validation worked correctly when using the `directory` parameter
+
+**Why it was an issue:** N/A - this was a success case
+
+**Notes:** The validation correctly identified 3 files (including a pre-existing file) and reported all as valid with no errors.
