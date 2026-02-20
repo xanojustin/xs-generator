@@ -1,66 +1,125 @@
-# FEEDBACK.md - Xano MCP/XanoScript Feedback
+# MCP/XanoScript Issues and Feedback
 
-## [2025-02-20 11:35 PST] - Conditional blocks cannot contain Each blocks
+## Issue #1: MCP Tools Unavailable
 
-**What I was trying to do:** Implement the spiral matrix traversal logic with conditional boundary checks (only traverse right column if rows remain, etc.)
+**Date:** 2026-02-20  
+**Severity:** Medium - Unable to perform automated validation
 
-**What the issue was:** The XanoScript parser does not allow `each` blocks to be nested inside `conditional` blocks. When I tried:
+### Problem Description
+The Xano MCP tools (`xanoscript_docs` and `validate_xanoscript`) referenced in the task specification are not available through the current OpenClaw CLI environment.
+
+### Attempted Access Methods
+
+1. **Direct MCP command:**
+   ```
+   openclaw mcp xanoscript_docs
+   Result: MCP tool not available via openclaw
+   ```
+
+2. **NPX MCP package:**
+   ```
+   npx -y @anthropic-ai/mcp@latest list
+   Result: MCP not available via npx
+   ```
+
+3. **OpenClaw CLI help:**
+   - No `mcp` subcommand listed in `openclaw --help`
+   - No `tools` subcommand for tool listing
+
+### Resolution
+MCP tools were located through the `mcporter` skill:
+```bash
+mcporter list                    # Lists available MCP servers
+mcporter list xano --schema      # Shows xano server tools and schema
+mcporter call xano.validate_xanoscript file_paths='["/path/to/file.xs"]'
 ```
+
+---
+
+## Issue #2: Syntax Error - `each` Blocks in Conditionals
+
+**Date:** 2026-02-20  
+**Severity:** Low - Documentation gap
+
+### Problem Description
+Using `each` blocks inside `conditional` statements causes a syntax error.
+
+### Error Message
+```
+[Line 57, Column 13] Expecting --> } <-- but found --> 'each' <--
+```
+
+### Solution
+`each` blocks should only be used within loops (`while`, `for`), not inside `conditional` blocks. Inside `conditional { if (...) { ... } }`, write statements directly without `each` wrapper.
+
+**Incorrect:**
+```xs
 conditional {
-  if ($top <= $bottom) {
+  if ($condition) {
     each {
-      // operations
+      var $x { value = 1 }
+      array.push $arr { value = $x }
     }
   }
 }
 ```
-I got the error: `Expecting --> } <-- but found --> 'each'`
 
-**Why it was an issue:** This is a common pattern in programming - conditionally executing a block of code. Having to restructure to use `while` loops with boolean flags is less intuitive:
-```
-var $continue { value = ($top <= $bottom) }
-while ($continue) {
-  each {
-    // operations
-    var.update $continue { value = false }
+**Correct:**
+```xs
+conditional {
+  if ($condition) {
+    var $x { value = 1 }
+    array.push $arr { value = $x }
   }
 }
 ```
 
-**Potential solution:** Either allow `each` inside `conditional` blocks, or provide clearer documentation about valid block nesting rules. The current error message is cryptic - it doesn't explain *why* `each` is unexpected there.
+---
+
+## Issue #3: Syntax Error - Math Operation Names
+
+**Date:** 2026-02-20  
+**Severity:** Low - Documentation gap
+
+### Problem Description
+Used `math.subtract` instead of the correct `math.sub`.
+
+### Error Message
+```
+[Line 66, Column 18] Expecting: one of these possible Token sequences:
+  1. [add]
+  2. [div]
+  3. [mod]
+  4. [mul]
+  5. [sub]
+  6. [bitwise]
+but found: 'subtract'
+```
+
+### Solution
+Use short-form math operation names:
+- `math.add` ✅
+- `math.sub` ✅ (not `math.subtract`)
+- `math.mul` (not `math.multiply`)
+- `math.div` (not `math.divide`)
+- `math.mod`
+- `math.bitwise`
 
 ---
 
-## [2025-02-20 11:32 PST] - Confusion about variable update syntax
+## General Feedback
 
-**What I was trying to do:** Update loop counter variables during iteration
+### MCP Tools Work Well
+Once discovered, the MCP tools work excellently:
+- Clear error messages with line/column numbers
+- Helpful suggestions in error messages
+- JSON output option for programmatic use
 
-**What the issue was:** I initially used `math.add $var { value = 1 }` and `math.subtract $var { value = 1 }` but noticed other examples used `var.update $var { value = $var + 1 }`
+### Documentation Request
+Would be helpful to have:
+1. Clear documentation on `each` block usage constraints
+2. Complete list of valid math operation names
+3. Quick reference card for common syntax patterns
 
-**Why it was an issue:** The validation error mentioned `Use "int" instead of "integer"` which was unrelated to the actual issue. It wasn't clear which pattern was preferred or if both were valid.
-
-**Potential solution:** Standardize on one approach in documentation and examples. The `var.update` pattern seems more flexible since it allows arbitrary expressions, not just increment/decrement.
-
----
-
-## [2025-02-20 11:30 PST] - MCP server not accessible via openclaw CLI
-
-**What I was trying to do:** Call `xanoscript_docs` tool as instructed in the task description
-
-**What the issue was:** The command `openclaw mcp xanoscript_docs --tool validate_xanoscript` didn't work. Had to use `mcporter` directly instead.
-
-**Why it was an issue:** The task instructions specifically said to call `xanoscript_docs` on the Xano MCP, but didn't clarify that this requires the `mcporter` CLI to be installed and configured separately.
-
-**Potential solution:** Update task instructions to specify using `mcporter call xano.validate_xanoscript` or similar, and ensure `mcporter` is pre-configured in the environment.
-
----
-
-## [2025-02-20 11:30 PST] - Error messages lack context
-
-**What I was trying to do:** Understand why my code was failing validation
-
-**What the issue was:** The error `Expecting --> } <-- but found --> 'each'` at line 57 didn't explain the *semantic* issue - that `each` blocks aren't allowed inside `conditional` blocks.
-
-**Why it was an issue:** Had to guess and check multiple restructuring attempts before finding a pattern that worked. Wasted time on trial and error instead of understanding the constraint.
-
-**Potential solution:** Improve error messages to explain the constraint violation, e.g.: `Error: 'each' blocks cannot be nested inside 'conditional' blocks. Consider restructuring with a 'while' loop.`
+### Files Affected
+- `function/spiral_matrix.xs` - Fixed both issues above
