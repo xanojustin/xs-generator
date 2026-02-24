@@ -1,6 +1,4 @@
-// Run job to test the multiply_strings function
-// Multiply Strings: Multiply two non-negative integers represented as strings
-run.job "Test Multiply Strings" {
+run.job "Multiply Strings Test" {
   main = {
     name: "multiply_strings"
     input: {
