@@ -1,12 +1,12 @@
-// Run job to test the valid_boomerang function
-// Tests various point configurations including valid boomerangs, collinear points, and duplicates
-run.job "Test Valid Boomerang" {
+run.job "Valid Boomerang Test" {
   main = {
-    name: "valid_boomerang"
+    name: "valid-boomerang"
     input: {
-      point1: { x: 1, y: 1 }
-      point2: { x: 2, y: 3 }
-      point3: { x: 3, y: 2 }
+      points: [
+        { x: 1, y: 1 }
+        { x: 2, y: 3 }
+        { x: 3, y: 2 }
+      ]
     }
   }
 }

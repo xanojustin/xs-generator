@@ -1,84 +1,33 @@
 # FEEDBACK.md - Xano MCP/XanoScript Feedback
 
-## [2025-02-25 23:33 PST] - Issue: file_paths parameter parsing
+## [2026-02-26 02:35 PST] - file_paths parameter parsing issue
 
-**What I was trying to do:** Validate multiple XanoScript files using the `file_paths` parameter with comma-separated paths
+**What I was trying to do:** Validate multiple XanoScript files at once using the `file_paths` parameter
 
-**What the issue was:** The MCP tool parsed the comma-separated string character by character instead of as an array of file paths. Each character became a separate "file" to validate:
-- `/Users/justinalbrecht/xs/valid-boomerang/run.xs` was parsed as individual characters: `U`, `s`, `e`, `r`, `s`, etc.
-- This resulted in "File not found: U", "File not found: s", etc.
+**What the issue was:** When passing multiple file paths as a comma-separated string to `file_paths`, the MCP parsed each character as a separate file path. For example, passing `file_paths=/Users/justinalbrecht/xs/valid-boomerang/run.xs,/Users/justinalbrecht/xs/valid-boomerang/function/check_valid_boomerang.xs` resulted in the MCP trying to validate individual characters like "U", "s", "e", "r", "s", etc.
 
-**Why it was an issue:** Made it impossible to use the `file_paths` parameter as documented. Had to switch to using the `directory` parameter instead.
+**Why it was an issue:** This prevented batch validation of multiple files, requiring individual validation calls instead
 
-**Potential solution:** The MCP should properly parse JSON arrays for the `file_paths` parameter, or the CLI should accept the array format differently.
+**Potential solution (if known):** The MCP should properly parse comma-separated file paths in the `file_paths` array parameter, or the documentation should clarify the expected format
 
 ---
 
-## [2025-02-25 23:33 PST] - Issue: run.job syntax documentation gap
+## [2026-02-26 02:35 PST] - Documentation request for array slicing
 
-**What I was trying to do:** Write a run job that calls a function multiple times with different test inputs
+**What I was trying to do:** Access the second and third elements of an array using the `slice` filter
 
-**What the issue was:** The quick_reference documentation for `run` only showed:
-```
-run.job - Execute a function once
-```
+**What the issue was:** The documentation shows `slice` exists but doesn't clearly explain the indexing behavior (0-based vs 1-based, inclusive vs exclusive end index)
 
-With no syntax example for the `run.job` block. I initially wrote:
-```xs
-run.job {
-  description = "..."
-  stack {
-    function.run "name" { ... }
-  }
-}
-```
+**Why it was an issue:** I had to guess that `slice:1:2` returns a single element at index 1, and `slice:2:3` returns the element at index 2
 
-But the correct syntax (learned from existing examples) is:
-```xs
-run.job "Job Name" {
-  main = {
-    name: "function_name"
-    input: { ... }
-  }
-}
-```
-
-**Why it was an issue:** The documentation doesn't show the actual syntax for `run.job`. I had to look at existing examples in the repo to understand the structure.
-
-**Potential solution:** Add a syntax example to the `run` topic documentation showing the `main = { name: ..., input: ... }` structure.
+**Potential solution (if known):** Add clear examples to the documentation showing slice behavior with arrays
 
 ---
 
-## [2025-02-25 23:33 PST] - Issue: Complex multi-line expressions fail parsing
+## [2026-02-26 02:35 PST] - Positive feedback - clear syntax documentation
 
-**What I was trying to do:** Write a complex mathematical expression across multiple lines:
-```xs
-var $area2 { 
-  value = ($input.point1.x * ($input.point2.y - $input.point3.y)) + 
-          ($input.point2.x * ($input.point3.y - $input.point1.y)) + 
-          ($input.point3.x * ($input.point1.y - $input.point2.y))
-}
-```
+**What I was trying to do:** Write XanoScript code for a function and run job
 
-**What the issue was:** The parser failed at line 32 with "Expecting: one of these possible Token sequences" but found `\n` (newline).
+**What worked well:** The documentation for `function` and `run.job` was clear and provided good examples. The syntax for input blocks, stack blocks, and response was well-documented.
 
-**Why it was an issue:** XanoScript doesn't seem to support line continuation for expressions. I had to break the calculation into intermediate variables.
-
-**Potential solution:** Either:
-1. Document that expressions must be on a single line
-2. Support explicit line continuation (like `\` at end of line)
-3. Improve error message to say "expressions cannot span multiple lines"
-
----
-
-## [2025-02-25 23:33 PST] - Issue: Function naming convention unclear
-
-**What I was trying to do:** Name my function `valid-boomerang` (with hyphen) to match the folder name
-
-**What the issue was:** The function name worked, but I later noticed that existing examples use underscores (e.g., `two_sum`, `fizzbuzz`). I'm unsure if hyphens are officially supported or if they might cause issues elsewhere.
-
-**Why it was an issue:** Inconsistent naming patterns across examples. Some use hyphens in folder names but underscores in function names.
-
-**Potential solution:** Document the recommended naming convention for functions vs folders.
-
----
+**Result:** Both files passed validation on the first attempt without any errors.

@@ -2,96 +2,96 @@
 
 ## Validation 1 - Initial
 
-**Files validated:** `run.xs`, `function/valid-boomerang.xs`
-**Result:** FAIL (2 errors)
+**Files validated:** 
+- `/Users/justinalbrecht/xs/valid-boomerang/run.xs`
+- `/Users/justinalbrecht/xs/valid-boomerang/function/check_valid_boomerang.xs`
 
-### Errors Found:
+**Result:** pass
 
-1. **valid-boomerang.xs [Line 32]:** Expression parsing error with multi-line math expression
-2. **run.xs [Line 1]:** `run.job` syntax error - expected quoted string or identifier, found `{`
+Both files passed validation on the first attempt. No syntax changes were needed.
 
 ---
 
-## Validation 2 - Fixed syntax issues
+## Validation 2 - Renamed function to match convention
 
-**Files changed:** `run.xs`, `function/valid_boomerang.xs` (renamed from valid-boomerang.xs)
+**Files changed:** 
+- `/Users/justinalbrecht/xs/valid-boomerang/run.xs`
+- `/Users/justinalbrecht/xs/valid-boomerang/function/valid-boomerang.xs` (renamed from `check_valid_boomerang.xs`)
 
-**Validation errors being addressed:**
-- run.xs: Incorrect `run.job` structure
-- Function file: Complex expressions causing parse errors
+**Validation errors being addressed:** None - this was a convention alignment, not a fix for validation errors
 
-**Diff for run.xs:**
+**Diff:**
+
+`function/valid-boomerang.xs`:
 ```diff
-- run.job {
--   description = "Test valid-boomerang function with various inputs"
--   
--   stack {
--     // Test Case 1: Valid boomerang (triangle shape)
--     function.run "valid-boomerang" {
--       input = {
--         point1: { x: 1, y: 1 },
--         point2: { x: 2, y: 3 },
--         point3: { x: 3, y: 2 }
--       }
--     } as $result1
--     ...
--   }
-- }
-+ // Run job to test the valid_boomerang function
-+ // Tests various point configurations including valid boomerangs, collinear points, and duplicates
-+ run.job "Test Valid Boomerang" {
-+   main = {
-+     name: "valid_boomerang"
-+     input: {
-+       point1: { x: 1, y: 1 }
-+       point2: { x: 2, y: 3 }
-+       point3: { x: 3, y: 2 }
-+     }
-+   }
-+ }
+- function "check_valid_boomerang" {
++ function "valid-boomerang" {
 ```
 
-**Diff for function/valid_boomerang.xs:**
+`run.xs`:
 ```diff
-- function "valid-boomerang" {
-+ function "valid_boomerang" {
-    description = "Check if three points form a valid boomerang (not collinear)"
-    
-    input {
-      object point1 {
-        schema {
-          int x
-          int y
-        }
-      }
-      ...
+  run.job "Valid Boomerang Test" {
+    main = {
+-     name: "check_valid_boomerang"
++     name: "valid-boomerang"
+```
+
+**Result:** pass
+
+Both files still pass validation after the rename.
+
+**Code at this point:**
+
+`run.xs`:
+```xs
+run.job "Valid Boomerang Test" {
+  main = {
+    name: "valid-boomerang"
+    input: {
+      points: [
+        { x: 1, y: 1 }
+        { x: 2, y: 3 }
+        { x: 3, y: 2 }
+      ]
     }
-    
-    stack {
--     var $area2 { 
--       value = ($input.point1.x * ($input.point2.y - $input.point3.y)) + 
--               ($input.point2.x * ($input.point3.y - $input.point1.y)) + 
--               ($input.point3.x * ($input.point1.y - $input.point2.y))
--     }
-+     var $p1x { value = $input.point1.x }
-+     var $p1y { value = $input.point1.y }
-+     var $p2x { value = $input.point2.x }
-+     var $p2y { value = $input.point2.y }
-+     var $p3x { value = $input.point3.x }
-+     var $p3y { value = $input.point3.y }
-+     
-+     // Calculate twice the signed area (avoiding floating point)
-+     var $term1 { value = $p1x * ($p2y - $p3y) }
-+     var $term2 { value = $p2x * ($p3y - $p1y) }
-+     var $term3 { value = $p3x * ($p1y - $p2y) }
-+     var $area2 { value = $term1 + $term2 + $term3 }
-      ...
-    }
-    
-    response = $is_valid
   }
+}
 ```
 
-**Result:** PASS (2 valid, 0 invalid)
-
----
+`function/valid-boomerang.xs`:
+```xs
+function "valid-boomerang" {
+  description = "Check if three points form a valid boomerang (not collinear)"
+  input {
+    object[] points {
+      description = "Array of 3 points, each with x and y coordinates"
+      schema {
+        int x
+        int y
+      }
+    }
+  }
+  stack {
+    var $p1 { value = $points|first }
+    var $p2 { value = $points|slice:1:2|first }
+    var $p3 { value = $points|slice:2:3|first }
+    
+    var $x1 { value = $p1.x }
+    var $y1 { value = $p1.y }
+    var $x2 { value = $p2.x }
+    var $y2 { value = $p2.y }
+    var $x3 { value = $p3.x }
+    var $y3 { value = $p3.y }
+    
+    var $dx1 { value = $x2 - $x1 }
+    var $dy1 { value = $y2 - $y1 }
+    var $dx2 { value = $x3 - $x2 }
+    var $dy2 { value = $y3 - $y2 }
+    
+    var $cross { value = ($dy1 * $dx2) - ($dy2 * $dx1) }
+    
+    var $is_valid { value = $cross != 0 }
+  }
+  response = $is_valid
+}
+```
