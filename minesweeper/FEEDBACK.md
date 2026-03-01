@@ -34,3 +34,13 @@ function.run "function_name" {
 **Potential solution:** A more specific error message like "Only one function definition allowed per file" would help. Also, the documentation is clear about this but easy to miss.
 
 ---
+
+## [2025-02-28 19:15 PST] - MCP validate_xanoscript works well
+
+**What I was trying to do:** Validate the XanoScript files
+
+**What worked well:** The validation tool correctly identified the syntax error and provided helpful line/column information. After fixing the issues, all files passed validation.
+
+**Potential improvement:** The directory parameter worked well for batch validation.
+
+---
