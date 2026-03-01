@@ -1,28 +1,38 @@
 # FEEDBACK.md - Xano MCP/XanoScript Feedback
 
-## [2026-02-24 07:05 PST] - File Paths Parameter Parsing Issue
+## [2025-03-01 11:05 PST] - 2D Array Type Not Supported
 
-**What I was trying to do:** Validate multiple files using the `file_paths` parameter with comma-separated paths.
+**What I was trying to do:** Define a function input that accepts a 2D matrix (array of arrays of integers)
 
-**What the issue was:** The MCP tool parsed the `file_paths` parameter incorrectly, treating each character as a separate file path. I passed `"~/xs/lucky-numbers-matrix/run.xs,~/xs/lucky-numbers-matrix/function/lucky_numbers.xs"` and it tried to validate individual characters like `~`, `/`, `x`, `s`, etc. as separate files.
+**What the issue was:** Used `int[][] matrix` syntax which resulted in a parse error: "Expecting token of type --> Identifier <-- but found --> '[' <--"
 
-**Why it was an issue:** This made batch validation via `file_paths` unusable. The error output showed 84 "files" being validated (each character of the two paths), all failing with "File not found".
+**Why it was an issue:** Common programming languages support nested array types like `int[][]`, but XanoScript doesn't appear to support this syntax directly. I had to use `json` type instead which loses type specificity.
 
-**Potential solution:** The MCP tool should properly parse comma-separated arrays in the `file_paths` parameter, or the documentation should clarify the expected format (e.g., JSON array vs comma-separated string).
-
-**Workaround used:** I successfully used the `directory` parameter instead to validate all `.xs` files in the exercise folder.
+**Potential solution (if known):** 
+- Consider supporting `int[]` for 1D arrays and documenting how to handle multi-dimensional arrays
+- Or provide a matrix/grid specific type for common use cases
+- The error message suggestion "Use type[] instead of array" doesn't help when you're already trying to use `[]` notation
 
 ---
 
-## [2026-02-24 07:05 PST] - Overall Experience
+## [2025-03-01 11:08 PST] - File Path Resolution with ~
 
-**What went well:**
-- The `directory` validation parameter worked perfectly
-- The `xanoscript_docs` topic system provided excellent, detailed documentation
-- Both `run.job` and `function` constructs were well-documented with clear examples
-- Code validated successfully on first attempt
+**What I was trying to do:** Validate files using `~/xs/...` paths
 
-**General feedback:**
-- The XanoScript documentation is comprehensive and well-organized by topic
-- The validation tool provides clear pass/fail status
-- The `functions` and `run` topic documentation had exactly what I needed to complete this exercise
+**What the issue was:** The MCP validator returned "File not found" when using tilde (~) paths. Had to use absolute paths `/Users/justinalbrecht/xs/...` instead.
+
+**Why it was an issue:** Shell conventions suggest ~ should expand to home directory. Had to manually convert paths.
+
+**Potential solution (if known):** The validator could expand `~` to the user's home directory before checking file existence.
+
+---
+
+## [2025-03-01 11:10 PST] - Positive Experience with Error Suggestions
+
+**What I was trying to do:** Fix the type syntax error
+
+**What went well:** The validation error included helpful suggestions like "Use 'type[]' instead of 'array'" and "Use 'int' instead of 'integer' for type declaration" which guided me toward the correct syntax.
+
+**Why this was helpful:** Even though the specific suggestion for 2D arrays didn't directly solve my problem, the hint about using `type[]` format was useful context.
+
+---

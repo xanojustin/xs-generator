@@ -1,14 +1,13 @@
-run.job "Find Lucky Numbers" {
+// Run job to test the lucky-numbers-matrix function
+run.job "Test Lucky Numbers Matrix" {
   main = {
-    name: "lucky_numbers"
+    name: "lucky-numbers-matrix"
     input: {
-      matrix: {
-        rows: [
-          [3, 7, 8],
-          [9, 11, 13],
-          [15, 16, 17]
-        ]
-      }
+      matrix: [
+        [3, 7, 8],
+        [9, 11, 13],
+        [15, 16, 17]
+      ]
     }
   }
 }

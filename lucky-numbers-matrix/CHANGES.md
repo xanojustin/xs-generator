@@ -3,16 +3,41 @@
 ## Validation 1 - Initial
 
 **Files validated:** 
+- `/Users/justinalbrecht/xs/lucky-numbers-matrix/function/lucky-numbers-matrix.xs`
 - `/Users/justinalbrecht/xs/lucky-numbers-matrix/run.xs`
-- `/Users/justinalbrecht/xs/lucky-numbers-matrix/function/lucky_numbers.xs`
 
-**Result:** PASS - Both files valid on first attempt
+**Result:** 
+- `lucky-numbers-matrix.xs`: Failed
+- `run.xs`: Passed
 
-**Code at this point:** Initial implementation of lucky numbers in a matrix exercise.
+**Errors:**
+```
+✗ lucky-numbers-matrix.xs: Found 1 error(s):
 
-- Created `run.xs` with run.job that calls the `lucky_numbers` function
-- Created `function/lucky_numbers.xs` with complete algorithm:
-  - Finds minimum of each row
-  - Finds maximum of each column  
-  - Identifies elements that are both row min and column max
-  - Returns array of lucky numbers
+1. [Line 8, Column 10] Expecting token of type --> Identifier <-- but found --> '[' <--
+
+💡 Suggestion: Use "type[]" instead of "array"
+
+Code at line 8:
+  int[][] matrix { description = "2D array of integers" }
+```
+
+---
+
+## Validation 2 - Fixed 2D array type
+
+**Files changed:** `function/lucky-numbers-matrix.xs`
+
+**Validation errors being addressed:** 2D array type `int[][]` not supported
+
+**Diff:**
+```diff
+   input {
+-    int[][] matrix { description = "2D array of integers" }
++    json matrix { description = "2D array of integers" }
+   }
+```
+
+**Result:** Pass - both files validated successfully
+
+---
