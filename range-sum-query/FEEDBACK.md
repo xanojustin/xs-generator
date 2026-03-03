@@ -1,86 +1,57 @@
 # FEEDBACK.md - Xano MCP/XanoScript Feedback
 
-## [2025-02-24 00:10 PST] - MCP Parameter Passing Format
+## [2026-03-03 09:35 PST] - Run Job Cannot Contain Function Definitions
 
-**What I was trying to do:** Call the `validate_xanoscript` tool to validate my XanoScript files
+**What I was trying to do:** Create a run job that calls a helper function to run multiple test cases, with both the run.job and the helper function in the same file.
 
-**What the issue was:** The parameter passing format through `mcporter` was not immediately clear. I tried several approaches:
-1. `mcporter call xano validate_xanoscript '{"file_paths": [...]}'` - JSON format didn't work
-2. `mcporter call xano validate_xanoscript --directory .` - was interpreted as code, not a flag
-3. `mcporter call xano validate_xanoscript directory="."` - worked but said no files found
-4. `mcporter call xano validate_xanoscript directory="/full/path"` - finally worked
+**What the issue was:** I initially tried to put both the `run.job` and a `function` definition in the same `run.xs` file:
 
-**Why it was an issue:** The error message "One of 'code', 'file_path', 'file_paths', or 'directory' parameter is required" kept appearing even when I was passing JSON parameters. The mcporter syntax was unclear.
-
-**Potential solution (if known):** The documentation could include clear examples of mcporter call syntax for each tool. Something like:
-```bash
-# Correct syntax:
-mcporter call xano validate_xanoscript directory="/full/path/to/dir"
-mcporter call xano validate_xanoscript file_path="/full/path/to/file.xs"
-```
-
----
-
-## [2025-02-24 00:12 PST] - Filter Expression Parentheses Rule
-
-**What I was trying to do:** Access the last element of an array using `$prefix[$prefix|count - 1]`
-
-**What the issue was:** The validator rejected this with "An expression should be wrapped in parentheses when combining filters and tests"
-
-**Why it was an issue:** The error message was slightly confusing - it mentioned "filters and tests" but the issue was combining a filter (`|count`) with arithmetic (`- 1`). I initially thought wrapping just the filter part in parentheses would work, but I had to restructure the code entirely.
-
-**What worked:**
 ```xs
-// Instead of:
-var $current_sum { value = $prefix[$prefix|count - 1] + $input.nums[$i] }
-
-// I used:
-var $prefix_len { value = ($prefix|count) - 1 }
-var $last_prefix { value = $prefix[$prefix_len] }
-var $current_sum { value = $last_prefix + $input.nums[$i] }
-```
-
-**Potential solution (if known):** The error message could be more specific, like: "When using filters in array indices, compute the index in a separate variable first" or show both the problematic pattern and the recommended fix.
-
----
-
-## [2025-02-24 00:08 PST] - Documentation Depth for Syntax Patterns
-
-**What I was trying to do:** Understand the correct syntax for loops, conditionals, and variable operations in XanoScript
-
-**What the issue was:** The `xanoscript_docs` tool returned high-level overviews but lacked detailed syntax patterns for common operations like:
-- While loop syntax
-- Array indexing patterns
-- How to use `math.add` vs `var.update`
-- When to use `each { }` inside loops
-
-**Why it was an issue:** I had to look at existing examples in `~/xs/` to understand the patterns, which worked but was slower than having reference documentation.
-
-**Potential solution (if known):** A "cheatsheet" or "quick_reference" topic in xanoscript_docs with common patterns like:
-```xs
-// While loop
-while ($i < $n) {
-  each {
-    // loop body
-    math.add $i { value = 1 }
+run.job "Range Sum Query Tests" {
+  main = {
+    name: "run_tests"
   }
 }
 
-// Array access
-var $elem { value = $arr[$index] }
-
-// Array push
-array.push $arr { value = $new_elem }
+function "run_tests" {
+  // ... test logic
+}
 ```
+
+This resulted in the validation error:
+```
+[Line 7, Column 1] Redundant input, expecting EOF but found: function
+```
+
+**Why it was an issue:** The error message was clear, but I initially misunderstood the architecture. I thought the run.xs file could contain supporting functions like other XanoScript files. It wasn't immediately obvious that functions must be in separate files under the `function/` directory.
+
+**Potential solution (if known):** 
+- Documentation could explicitly state that `run.xs` can ONLY contain `run.job` or `run.service` definitions
+- A more descriptive error message like "Functions must be defined in separate files within the function/ directory" would help
+- The run.xs documentation shows examples with separate function files, but doesn't explicitly prohibit functions in run.xs
 
 ---
 
-## General Observations
+## [2026-03-03 09:32 PST] - File Path Expansion Issue
 
-**What worked well:**
-- The validation tool is helpful and gives line/column precise errors
-- The error messages include suggestions (like "Use 'int' instead of 'integer'")
-- Looking at existing examples in `~/xs/` provided good reference material
-- The file structure conventions are clear from the docs
+**What I was trying to do:** Validate files using the `directory` parameter with a tilde path (`~/xs/range-sum-query`).
 
-**Overall experience:** Once I figured out the mcporter syntax and saw a few examples, development was straightforward. The main friction was around syntax discovery and the filter expression parentheses rule.
+**What the issue was:** The MCP returned "No .xs files found in directory: ~/xs/range-sum-query" because the tilde wasn't expanded to the full home directory path.
+
+**Why it was an issue:** Had to use the absolute path `/Users/justinalbrecht/xs/range-sum-query` instead. This is minor but could trip up users who expect standard shell tilde expansion.
+
+**Potential solution (if known):** The MCP could handle tilde expansion for better UX, or the documentation could note that absolute paths are required.
+
+---
+
+## [2026-03-03 09:30 PST] - MCP Discovery Was Smooth
+
+**What I was trying to do:** Find and use the Xano MCP server to get XanoScript documentation.
+
+**What the issue was:** None - the `mcporter list` command found the xano server immediately, and `xanoscript_docs` worked perfectly.
+
+**Why it was an issue:** N/A - this was a positive experience.
+
+**Potential solution (if known):** The MCP setup was already configured, so this worked seamlessly. Good developer experience here.
+
+---

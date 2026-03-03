@@ -1,56 +1,63 @@
-# Range Sum Query
+# Range Sum Query - Immutable
 
 ## Problem
-Given an integer array `nums`, handle multiple queries asking for the sum of elements between indices `left` and `right` (inclusive).
 
-The naive approach of summing elements for each query would be O(n) per query. We can optimize this to O(1) per query by precomputing a **prefix sum array**.
+Given an integer array `nums`, handle multiple queries of the form: sum of elements between indices `left` and `right` (inclusive), where `left <= right`.
 
-### Prefix Sum Approach
-- Build an array `prefix` where `prefix[i]` represents the sum of all elements from index 0 to i-1
-- `prefix[0] = 0` (sum of zero elements)
-- `prefix[i+1] = prefix[i] + nums[i]`
-- Range sum from `left` to `right` = `prefix[right+1] - prefix[left]`
+Implement the `range_sum_query` function that efficiently computes range sums. Since the array is immutable (never changes after creation), we can use **prefix sums** to answer each query in O(1) time after O(n) preprocessing.
 
-**Example:**
-- Input: `nums = [-2, 0, 3, -5, 2, -1]`, query `(0, 2)`
-- Prefix array: `[0, -2, -2, 1, -4, -2, -3]`
-- Range sum = `prefix[3] - prefix[0] = 1 - 0 = 1`
-- Verification: `-2 + 0 + 3 = 1` ✓
+### Algorithm
+
+1. **Precompute prefix sums**: Create an array `prefix` where `prefix[i]` equals the sum of all elements from index 0 to i-1 (i.e., `prefix[0] = 0`, `prefix[1] = nums[0]`, `prefix[2] = nums[0] + nums[1]`, etc.)
+
+2. **Answer queries**: To find the sum of elements from `left` to `right` (inclusive), use: `prefix[right + 1] - prefix[left]`
+
+This approach reduces each query from O(n) to O(1) time complexity.
 
 ## Structure
-- **Run Job (`run.xs`):** Calls the solution function with test inputs
-- **Function (`function/range_sum_query.xs`):** Contains the prefix sum solution logic
+
+- **Run Job (`run.xs`):** Calls the `run_tests` function to execute all test cases
+- **Function (`function/range_sum_query.xs`):** Contains the solution logic with prefix sum computation
+- **Test Runner (`function/run_tests.xs`):** Helper function that runs multiple test cases and returns results
 
 ## Function Signature
+
 - **Input:**
-  - `nums: int[]` - Array of integers
-  - `left: int` - Left index (inclusive, 0-based)
-  - `right: int` - Right index (inclusive, 0-based)
-- **Output:** `int` - Sum of elements from index left to right (inclusive)
+  - `nums` (int[]): The immutable integer array to query
+  - `left` (int): Starting index (inclusive), must be >= 0
+  - `right` (int): Ending index (inclusive), must be >= left and < length of nums
+
+- **Output:**
+  - Returns (int): The sum of elements `nums[left] + nums[left+1] + ... + nums[right]`
 
 ## Test Cases
 
-| nums | left | right | Expected Output |
-|------|------|-------|-----------------|
-| `[-2, 0, 3, -5, 2, -1]` | 0 | 2 | 1 |
-| `[-2, 0, 3, -5, 2, -1]` | 2 | 5 | -1 |
-| `[-2, 0, 3, -5, 2, -1]` | 0 | 5 | -3 |
-| `[5]` | 0 | 0 | 5 |
-| `[1, 2, 3, 4, 5]` | 1 | 3 | 9 |
-
-### Test Case Explanations
-1. **Basic case:** Sum of first 3 elements: `-2 + 0 + 3 = 1`
-2. **Middle range:** Sum from index 2 to 5: `3 + (-5) + 2 + (-1) = -1`
-3. **Full array:** Sum of all elements: `-2 + 0 + 3 + (-5) + 2 + (-1) = -3`
-4. **Edge case (single element):** Array with one element
-5. **Positive numbers:** Sum of middle elements: `2 + 3 + 4 = 9`
+| Test | nums | left | right | Expected Output | Description |
+|------|------|------|-------|-----------------|-------------|
+| 1 | [-2, 0, 3, -5, 2, -1] | 0 | 2 | 1 | Sum of first 3 elements: -2 + 0 + 3 = 1 |
+| 2 | [-2, 0, 3, -5, 2, -1] | 2 | 5 | -1 | Sum of middle 4 elements: 3 + (-5) + 2 + (-1) = -1 |
+| 3 | [-2, 0, 3, -5, 2, -1] | 0 | 5 | -3 | Sum of entire array: -2 + 0 + 3 + (-5) + 2 + (-1) = -3 |
+| 4 | [-2, 0, 3, -5, 2, -1] | 3 | 3 | -5 | Single element at index 3 |
+| 5 | [5] | 0 | 0 | 5 | Edge case: single element array |
+| 6 | [1, 2] | 0 | 1 | 3 | Edge case: two element array |
 
 ## Complexity Analysis
-- **Preprocessing Time:** O(n) to build prefix sum array
+
+- **Preprocessing Time:** O(n) where n is the length of nums
 - **Query Time:** O(1) per query
 - **Space Complexity:** O(n) for the prefix sum array
 
-## Applications
-- Range sum queries in immutable arrays
-- Building blocks for 2D range sum queries (integral image)
-- Cumulative frequency tables
+## Example
+
+```xs
+// Query: sum of elements from index 0 to 2
+function.run "range_sum_query" {
+  input = {
+    nums: [-2, 0, 3, -5, 2, -1]
+    left: 0
+    right: 2
+  }
+} as $result
+
+// $result = 1 (because -2 + 0 + 3 = 1)
+```

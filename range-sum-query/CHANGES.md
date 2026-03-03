@@ -1,42 +1,40 @@
 # CHANGES.md - Code Evolution Between Validations
 
-## Validation 1 - Initial
+## Validation 1 - Initial Implementation
 
-**Files validated:** 
-- `function/range_sum_query.xs`
-- `run.xs`
-
-**Result:** FAIL
-
-**Validation errors:**
-```
-1. [Line 22, Column 60] An expression should be wrapped in parentheses when combining filters and tests
-
-💡 Suggestion: Use "int" instead of "integer" for type declaration
-
-Code at line 22:
-  var $current_sum { value = $prefix[$prefix|count - 1] + $input.nums[$i] }
-```
-
-**Issue:** The expression `$prefix|count - 1` combines a filter with arithmetic and needs to be wrapped or computed separately.
+**Files validated:** `run.xs`, `function/range_sum_query.xs`
+**Result:** ✅ Pass
+**Code at this point:** Initial implementation of the range sum query function with prefix sum logic and basic run job.
 
 ---
 
-## Validation 2 - Fixed array index expression
+## Validation 2 - Added Test Runner
 
-**Files changed:** `function/range_sum_query.xs`
+**Files changed:** `run.xs`, `function/run_tests.xs` (new file)
+**Validation errors being addressed:**
+```
+❌ Files with errors:
 
-**Validation errors being addressed:** Line 22 - expression combining filters and arithmetic
+✗ run.xs: Found 1 error(s):
+
+1. [Line 7, Column 1] Redundant input, expecting EOF but found: function
+
+Code at line 7:
+  function "run_tests" {
+```
 
 **Diff:**
 ```diff
--        var $current_sum { value = $prefix[$prefix|count - 1] + $input.nums[$i] }
-+        var $prefix_len { value = ($prefix|count) - 1 }
-+        var $last_prefix { value = $prefix[$prefix_len] }
-+        var $current_sum { value = $last_prefix + $input.nums[$i] }
+- run.xs (combined run.job and function in same file)
++ run.xs (only run.job)
++ function/run_tests.xs (test runner function)
 ```
 
-**Result:** PASS - Both files validated successfully
+**What was fixed:**
+- Moved the `run_tests` function from `run.xs` into a separate file `function/run_tests.xs`
+- `run.xs` now only contains the `run.job` definition
+- This follows XanoScript's architecture where run.xs cannot contain function definitions
+
+**Result:** ✅ Pass - All 3 files validated successfully
 
 ---
-
