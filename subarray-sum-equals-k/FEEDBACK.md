@@ -1,45 +1,48 @@
 # FEEDBACK.md - Xano MCP/XanoScript Feedback
 
-## [2026-02-20 23:32 PST] - validate_xanoscript file_paths parameter parsing
+## [2026-03-04 03:32 PST] - Bitwise OR filter not available
 
-**What I was trying to do:** Validate multiple files at once using the `file_paths` parameter with comma-separated values.
+**What I was trying to do:** Implement the "Bitwise ORs of Subarrays" exercise using bitwise OR operations (`|bor:` filter)
 
-**What the issue was:** The MCP tool parsed the comma-separated file paths as individual characters instead of as separate file paths. When I passed:
-```
-file_paths="/Users/justinalbrecht/xs/subarray-sum-equals-k/run.xs,/Users/justinalbrecht/xs/subarray-sum-equals-k/function/subarray_sum.xs"
-```
+**What the issue was:** The validation tool returned an error: "Unknown filter function 'bor'"
 
-The tool reported errors like:
-```
-File not found: U
-File not found: s
-File not found: e
-...
-File not found: ,
-...
-```
+**Why it was an issue:** This prevented me from implementing the original exercise I had chosen. I had to switch to a different exercise that doesn't require bitwise operations.
 
-It seems the parameter was split by character rather than by comma.
-
-**Why it was an issue:** This prevented batch validation of multiple files, forcing me to call the tool twice (once per file) which is less efficient.
-
-**Potential solution:** The MCP should properly parse array-type parameters when passed via CLI. The `file_paths` parameter is defined as an array of strings in the schema, but the CLI parsing appears to be treating the input as a single string and then splitting it incorrectly.
-
-**Workaround:** Use `file_path` parameter for single files or `directory` parameter for batch validation of entire directories.
+**Potential solution (if known):** 
+- Add bitwise operation filters: `bor` (bitwise OR), `band` (bitwise AND), `bxor` (bitwise XOR), `bnot` (bitwise NOT)
+- Document available math/bitwise operations more clearly in the syntax documentation
+- Provide a comprehensive list of all available filters
 
 ---
 
-## [2026-02-20 23:33 PST] - Documentation was clear and helpful
+## [2026-03-04 03:33 PST] - MCporter validate_xanoscript parameter passing issues
 
-**What I was trying to do:** Write XanoScript code for a run job and function.
+**What I was trying to do:** Validate XanoScript code using the `validate_xanoscript` tool via mcporter
 
-**What went well:** The `xanoscript_docs` tool with `mode="quick_reference"` provided exactly the syntax patterns I needed. The documentation was clear about:
-- Function structure with `input`, `stack`, and `response`
-- Run job structure with `main = { name: ..., input: ... }`
-- Variable access rules (`$input.field` for inputs, `$var.field` or just `$field` for stack variables)
-- Type names (int, text, bool, int[], etc.)
-- Filter syntax and the need for parentheses when using filters with operators
+**What the issue was:** Multiple attempts to pass file paths failed:
+1. `--file_path` parameter interpreted the path as code content
+2. `--file_paths` parameter didn't work as expected
+3. `--directory` parameter didn't work as expected
+4. Passing code via stdin (`@-`) didn't work
 
-**Why it helped:** The quick reference mode was concise enough to not overwhelm context while still providing all necessary syntax details. The examples showing correct vs incorrect patterns (especially for input variable access) prevented common mistakes.
+**Why it was an issue:** Had to read file content into a variable and pass it via the `code=` parameter, which is less convenient than using file paths directly.
+
+**Potential solution (if known):**
+- Fix the parameter handling in mcporter to properly distinguish between file paths and code content
+- Ensure `--file_path` reads from the specified file instead of treating the path as code
+- Support for stdin redirection would be helpful for piping code
 
 ---
+
+## [2026-03-04 03:35 PST] - Limited documentation on available filters/functions
+
+**What I was trying to do:** Find a list of all available filters, especially for math and bitwise operations
+
+**What the issue was:** The documentation doesn't provide a comprehensive list of available filters. Searching through the syntax documentation didn't reveal what filters are available for mathematical or bitwise operations.
+
+**Why it was an issue:** Had to discover through trial and error which filters exist (e.g., found that `bor` doesn't exist, but `math.add` and `math.div` do from looking at examples).
+
+**Potential solution (if known):**
+- Provide a comprehensive reference list of all available filters organized by category (string, array, math, etc.)
+- Include examples for each filter
+- Make it clear which operations are available as filters vs. as separate constructs
