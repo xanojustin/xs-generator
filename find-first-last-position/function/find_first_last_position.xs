@@ -1,15 +1,9 @@
-// Find First and Last Position of Element in Sorted Array
-// Given a sorted array of integers and a target value,
-// find the starting and ending position of the target value.
-// Uses modified binary search for O(log n) time complexity.
 function "find_first_last_position" {
-  description = "Finds the first and last positions of a target value in a sorted array"
-
+  description = "Find the first and last position of a target element in a sorted array"
   input {
-    int[] nums { description = "Sorted array of integers (ascending order)" }
-    int target { description = "Target value to search for" }
+    int[] nums
+    int target
   }
-
   stack {
     // Edge case: empty array
     conditional {
@@ -17,66 +11,65 @@ function "find_first_last_position" {
         return { value = [-1, -1] }
       }
     }
-
-    // Find first position (leftmost occurrence)
-    var $first { value = -1 }
+    
+    // Helper function to find first occurrence using binary search
     var $left { value = 0 }
     var $right { value = ($input.nums|count) - 1 }
-
+    var $first { value = -1 }
+    
     while ($left <= $right) {
       each {
-        var $mid { value = $left + (($right - $left) / 2) }
-        var $mid_value { value = $input.nums[$mid] }
-
+        var $mid { value = ($left + $right) / 2 }
+        var $mid_val { value = $input.nums|get:$mid }
+        
         conditional {
-          if ($mid_value == $input.target) {
-            var $first { value = $mid }
-            var $right { value = $mid - 1 }
+          if ($mid_val == $input.target) {
+            var.update $first { value = $mid }
+            var.update $right { value = $mid - 1 }
           }
-          elseif ($mid_value < $input.target) {
-            var $left { value = $mid + 1 }
+          elseif ($mid_val < $input.target) {
+            var.update $left { value = $mid + 1 }
           }
           else {
-            var $right { value = $mid - 1 }
+            var.update $right { value = $mid - 1 }
           }
         }
       }
     }
-
+    
     // If first not found, target doesn't exist
     conditional {
       if ($first == -1) {
         return { value = [-1, -1] }
       }
     }
-
-    // Find last position (rightmost occurrence)
+    
+    // Find last occurrence using binary search
+    var.update $left { value = 0 }
+    var.update $right { value = ($input.nums|count) - 1 }
     var $last { value = -1 }
-    var $left { value = 0 }
-    var $right { value = ($input.nums|count) - 1 }
-
+    
     while ($left <= $right) {
       each {
-        var $mid { value = $left + (($right - $left) / 2) }
-        var $mid_value { value = $input.nums[$mid] }
-
+        var $mid { value = ($left + $right) / 2 }
+        var $mid_val { value = $input.nums|get:$mid }
+        
         conditional {
-          if ($mid_value == $input.target) {
-            var $last { value = $mid }
-            var $left { value = $mid + 1 }
+          if ($mid_val == $input.target) {
+            var.update $last { value = $mid }
+            var.update $left { value = $mid + 1 }
           }
-          elseif ($mid_value < $input.target) {
-            var $left { value = $mid + 1 }
+          elseif ($mid_val < $input.target) {
+            var.update $left { value = $mid + 1 }
           }
           else {
-            var $right { value = $mid - 1 }
+            var.update $right { value = $mid - 1 }
           }
         }
       }
     }
-
+    
     var $result { value = [$first, $last] }
   }
-
   response = $result
 }
